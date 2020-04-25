@@ -36,13 +36,14 @@ class Papers extends CI_Controller {
 		$email = $this->input->post("email");
 		$password = $this->input->post("password");
 
+		$data['users'] = $this->papers_model->test();
 		
-
-		if ($email == "admin@gmail.com" && $password=="pass") {
-			echo 'success';
+		if ($this->papers_model->check_login($email, $password)) {
+			// echo 'success';
+			$this->load->view('papers/success');
 		} else {
 
-			echo 'failure';
+			$this->load->view('papers/failure');
 		}
 
 	}
