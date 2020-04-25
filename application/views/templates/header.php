@@ -8,12 +8,12 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-md-4"></div>
-			<h1 class="col-md-4">Welcome to Fakebay</h1>
+			<h3 class="col-md-4">Welcome to Fakebay</h1>
 			<div class="col-md-4"></div>
 		</div>
 	</div>
 </head>
 <body>
-<h6> END OF HEADER </h6>
+<!-- <h6> END OF HEADER </h6> -->
 
 

@@ -16,7 +16,8 @@ class Papers_model extends CI_Model {
 		return $this->db->query($query)->result_array();
 	}
 
-	// returns true if the user given by email and password is valid
+	// returns user data if the user given by email and password is valid
+	// returns false otherwise
 	public function check_login($email, $password){
 		$passquery = sprintf('select * from users where email = "%s"', $email);
 		$userdetails = $this->db->query($passquery)->row();
@@ -27,7 +28,7 @@ class Papers_model extends CI_Model {
 			$data['username'] = $userdetails->username;
 			$data['email'] = $userdetails->email;
 			$data['user_id'] = $userdetails->user_id;
-			return true;
+			return $data;
 		} else {
 			return false;
 		}

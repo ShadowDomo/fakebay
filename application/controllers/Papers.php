@@ -22,30 +22,62 @@ class Papers extends CI_Controller {
 	}
 
 	public function index(){
-		$data['users'] = $this->papers_model->get_user();
-		$data['title'] = 'Users';
+		// $data['users'] = $this->papers_model->get_user();
+		// $data['title'] = 'Users';
 
-		$this->load->view('templates/header', $data);
-		$this->load->view('papers/login', $data);
-		$this->load->view('templates/footer', $data);
+		$this->load->view('templates/header');
+		$this->load->view('papers/login');
+		$this->load->view('templates/footer');
 
 	}
 
 	public function login() {
-
 		$email = $this->input->post("email");
 		$password = $this->input->post("password");
 
 		$data['users'] = $this->papers_model->test();
 		
 		if ($this->papers_model->check_login($email, $password)) {
-			// echo 'success';
+	
 			$this->load->view('papers/success');
 		} else {
 
 			$this->load->view('papers/failure');
 		}
+	}
 
+	public function register() {
+		$email = $this->input->post("email");
+		$password = $this->input->post("password");
+		$confirmedpassword = $this->input->post("confirmed_password");
+		$username = $this->input->post("username");
+
+		if ($confirmedpassword != $password) {
+			// is not clean if passwords do not match
+			$data['clean'] = false;
+			$this->load->view('templates/header');
+			$this->load->view('papers/register', $data);
+			$this->load->view('templates/footer');
+		} else {
+			echo $email;
+			echo $password;
+			echo $username;
+		}
+	}
+
+	public function loginform() {
+		// check if register or not
+		$submitvalue = $this->input->post("submit");
+		// echo $submitvalue;
+		if ($submitvalue == "register") {
+			// is clean if clicked from start
+			$data['clean'] = true;
+			$this->load->view('templates/header');
+			$this->load->view('papers/register', $data);
+			$this->load->view('templates/footer');
+		} else {
+			$this->login();
+		}
 	}
 
 }
