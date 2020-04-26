@@ -35,7 +35,7 @@ class Papers extends CI_Controller {
 		$email = $this->input->post("email");
 		$password = $this->input->post("password");
 
-		$data['users'] = $this->papers_model->test();
+		// $data['users'] = $this->papers_model->test();
 		
 		if ($this->papers_model->check_login($email, $password)) {
 	
@@ -52,32 +52,49 @@ class Papers extends CI_Controller {
 		$confirmedpassword = $this->input->post("confirmed_password");
 		$username = $this->input->post("username");
 
-		if ($confirmedpassword != $password) {
+		// check if the password is valid
+		$validpassword = ($confirmedpassword == $password) ? true : false;
+
+		// check if username and email are valid
+		$validUsernameAndEmail = $this->papers_model->check_registration($email, $username);
+
+		// register user if details are valid
+		if ($validpassword) {
+			if ($validUsernameAndEmail) {
+				$this->papers_model->register_user($email, $username, $password);
+				echo "success";
+			} else {
+				$data['error'] = "usernameemailerror";
+				$this->load->view('templates/header');
+				$this->load->view('papers/register', $data);
+				$this->load->view('templates/footer');
+			}
+		} else {
 			// is not clean if passwords do not match
-			$data['clean'] = false;
+			$data['error'] = "passworderror";
 			$this->load->view('templates/header');
 			$this->load->view('papers/register', $data);
 			$this->load->view('templates/footer');
-		} else {
-			echo $email;
-			echo $password;
-			echo $username;
 		}
 	}
 
-	public function loginform() {
+	public function formchecker() {
 		// check if register or not
 		$submitvalue = $this->input->post("submit");
-		// echo $submitvalue;
+	
 		if ($submitvalue == "register") {
-			// is clean if clicked from start
-			$data['clean'] = true;
-			$this->load->view('templates/header');
-			$this->load->view('papers/register', $data);
-			$this->load->view('templates/footer');
+			$this->registerform();
 		} else {
 			$this->login();
 		}
+	}
+
+	public function registerform() {
+		// is clean if clicked from start
+		$data['error'] = "none";
+		$this->load->view('templates/header');
+		$this->load->view('papers/register', $data);
+		$this->load->view('templates/footer');
 	}
 
 }

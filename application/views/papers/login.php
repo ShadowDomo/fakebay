@@ -5,7 +5,7 @@
 		<div class="col"></div>
 		<div class="col">
 			<h1>Login</h1>
-			<?php echo form_open('Papers/loginform'); ?>
+			<?php echo form_open('Papers/formchecker'); ?>
 			<div class="form-group">
 				<label for="email">Email address:</label>
 				<input type="email" name="email" class="form-control" id="email" placeholder="email">

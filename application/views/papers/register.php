@@ -26,8 +26,10 @@
 			</div>
 			
 			<?php
-				if (!$clean) {
+				if ($error == "passworderror") {
 					echo '<div class="alert alert-warning">Passwords do not match. Please try again!</div>';
+				} else if ($error = "usernameemailerror") {
+					echo '<div class="alert alert-warning">Invalid username or email. Please try again!</div>';
 				}
 			?>
 			<?php echo form_close(); ?>
