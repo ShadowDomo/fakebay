@@ -21,14 +21,14 @@
 				<input type="password" name="confirmed_password" class="form-control" id="password" placeholder="*******">
 			</div>
 			<div class="row justify-content-between ">
-				<button name="submit" type="submit" class="btn btn-default" value="log in">Submit</button>
+				<button name="submit" type="submit" class="btn btn-primary ml-3" value="log in">Submit</button>
 				<!-- <button name="submit" type="submit" class="btn btn-primary" value="register">Register</button> -->
 			</div>
 			
 			<?php
 				if ($error == "passworderror") {
 					echo '<div class="alert alert-warning">Passwords do not match. Please try again!</div>';
-				} else if ($error = "usernameemailerror") {
+				} else if ($error == "usernameemailerror") {
 					echo '<div class="alert alert-warning">Invalid username or email. Please try again!</div>';
 				}
 			?>

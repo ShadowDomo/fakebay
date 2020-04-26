@@ -6,14 +6,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Fakebay</title>
 	<div class="container">
-		<div class="row">
+		<div class="row"awd>
 			<div class="col-md-4"></div>
-			<h3 class="col-md-4">Welcome to Fakebay</h1>
+			<h3 class="col-md-4">Welcome to Fakebay</h3>
 			<div class="col-md-4"></div>
 		</div>
 	</div>
 </head>
 <body>
+
+<div class="container">
+	<div class="row">
+		<div class="col-2 alert alert-warning"></div>
+			<div class="col-8 alert alert-info">
 <!-- <h6> END OF HEADER </h6> -->
 
 

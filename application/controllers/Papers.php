@@ -25,27 +25,38 @@ class Papers extends CI_Controller {
 		// $data['users'] = $this->papers_model->get_user();
 		// $data['title'] = 'Users';
 
+		$data['error'] = "none";
 		$this->load->view('templates/header');
-		$this->load->view('papers/login');
+		$this->load->view('papers/login', $data);
 		$this->load->view('templates/footer');
 
 	}
 
+
+	public function homePage() {
+		$this->load->view('templates/header');
+		$this->load->view('papers/searchbar');
+		$this->load->view('papers/home');
+		$this->load->view('templates/footer');
+	}
+
+	// user login
 	public function login() {
 		$email = $this->input->post("email");
 		$password = $this->input->post("password");
-
-		// $data['users'] = $this->papers_model->test();
 		
-		if ($this->papers_model->check_login($email, $password)) {
-	
+		if ($this->papers_model->checkLogin($email, $password)) {
 			$this->load->view('papers/success');
-		} else {
-
-			$this->load->view('papers/failure');
+			return;
 		}
+		$data['error'] = "invalid";
+		$this->load->view('templates/header');
+		$this->load->view('papers/login', $data);
+		$this->load->view('templates/footer');
 	}
 
+
+	// registers a user
 	public function register() {
 		$email = $this->input->post("email");
 		$password = $this->input->post("password");
@@ -56,41 +67,42 @@ class Papers extends CI_Controller {
 		$validpassword = ($confirmedpassword == $password) ? true : false;
 
 		// check if username and email are valid
-		$validUsernameAndEmail = $this->papers_model->check_registration($email, $username);
+		$validdeets = $this->papers_model->checkRegistration($email, $username);
 
 		// register user if details are valid
 		if ($validpassword) {
-			if ($validUsernameAndEmail) {
-				$this->papers_model->register_user($email, $username, $password);
+			if ($validdeets) {
+				$this->papers_model->registerUser($email, $username, $password);
 				echo "success";
-			} else {
-				$data['error'] = "usernameemailerror";
-				$this->load->view('templates/header');
-				$this->load->view('papers/register', $data);
-				$this->load->view('templates/footer');
-			}
-		} else {
-			// is not clean if passwords do not match
-			$data['error'] = "passworderror";
+				return;
+			} 
+			$data['error'] = "usernameemailerror";
 			$this->load->view('templates/header');
 			$this->load->view('papers/register', $data);
 			$this->load->view('templates/footer');
-		}
+			return;
+		} 
+		// is not clean if passwords do not match
+		$data['error'] = "passworderror";
+		$this->load->view('templates/header');
+		$this->load->view('papers/register', $data);
+		$this->load->view('templates/footer');
 	}
 
-	public function formchecker() {
-		// check if register or not
+	// checks whether login or register button clicked
+	public function formChecker() {
 		$submitvalue = $this->input->post("submit");
 	
 		if ($submitvalue == "register") {
 			$this->registerform();
-		} else {
-			$this->login();
+			return;
 		}
+		$this->login();
 	}
 
+	// opens register form
 	public function registerform() {
-		// is clean if clicked from start
+		// error value determs what the form says
 		$data['error'] = "none";
 		$this->load->view('templates/header');
 		$this->load->view('papers/register', $data);
