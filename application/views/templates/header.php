@@ -15,9 +15,10 @@
 </head>
 <body>
 
-<div class="container">
+<div class="container-fluid">
 	<div class="row">
-		<div class="col-2 alert alert-warning"></div>
+		<!-- alerts are for debugging TODO remove -->
+		<div class="col-2 alert alert-warning"></div> 
 			<div class="col-8 alert alert-info">
 <!-- <h6> END OF HEADER </h6> -->
 
