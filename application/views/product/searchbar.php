@@ -6,7 +6,7 @@
         <div class="col-8">
             <div class="form-group">
                 <!-- kunt-->
-                <input type="text" name="search" class="form-control" id="search" placeholder="Search">
+                <input type="text" name="search" class="form-control" id="search" placeholder="Search for anything">
             </div>
         
         </div>

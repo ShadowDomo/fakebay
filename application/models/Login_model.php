@@ -18,10 +18,10 @@ class Login_model extends CI_Model
 		if ($userdetails->num_rows() == 0) {
 			return false;
 		}
-		$userpassword = $userdetails->row()->password;
+		$userpassword_hash = $userdetails->row()->password;
 
 		if (
-			$password == $userpassword && strlen($email) != 0
+			password_verify($password, $userpassword_hash) && strlen($email) != 0
 			&& strlen($password) != 0
 		) {
 			// user authenticated
@@ -33,27 +33,72 @@ class Login_model extends CI_Model
 		return false;
 	}
 
-	
+	// checks if the new username is valid
+	public function checkNewUsernameValid($username)
+	{
+		$usernamequery = sprintf('select count(*) as "count" from users where username = "%s"', $username);
+		$countusernames = $this->db->query($usernamequery)->row()->count;
+
+		if ($countusernames != 0 || strlen($username) == 0) {
+			return false;
+		}
+
+		return true;
+	}
+
+
+	// checks if the new email is valid
+	public function checkNewEmailValid($email)
+	{
+		$emailquery = sprintf('select count(*) as "count" from users where email = "%s"', $email);
+		$countemails = $this->db->query($emailquery)->row()->count;
+
+		if ($countemails != 0 || strlen($email) == 0) {
+			return false;
+		}
+
+		return true;
+	}
+
+
 
 	// checks if the details are valid for registration
 	public function checkRegistration($email, $username)
 	{
-		$emailquery = sprintf('select count(*) as "count" from users where email = "%s"', $email);
-		$usernamequery = sprintf('select count(*) as "count" from users where username = "%s"', $username);
-
-		$countemails = $this->db->query($emailquery)->row()->count;
-		$countusernames = $this->db->query($usernamequery)->row()->count;
-
-		if ($countemails != 0 || $countusernames != 0 || strlen($email) == 0 || strlen($username) == 0) {
-			return false;
-		}
-		return true;
+		return $this->checkNewEmailValid($email) && $this->checkNewUsernameValid($username);
 	}
 
 	// registers a user 
 	public function registerUser($email, $username, $password)
 	{
-		$insertquery = sprintf('insert into users (email, password, username) values ("%s", "%s", "%s")', $email, $password, $username);
+		$hashed = password_hash($password, PASSWORD_BCRYPT);
+		$insertquery = sprintf('insert into users (email, password, username) values ("%s", "%s", "%s")', $email, $hashed, $username);
+		$this->db->query($insertquery);
+	}
+
+	public function getUserDetails($user_id)
+	{
+		$query = sprintf('select * from users where user_id = %s', $user_id);
+		return $this->db->query($query)->row();
+	}
+
+	public function changePassword($user_id, $new_password)
+	{
+		$new_hash = password_hash($new_password, PASSWORD_BCRYPT);
+		$insertquery = sprintf('update users set password = "%s" where user_id = %s', $new_hash, $user_id);
+		$this->db->query($insertquery);
+	}
+
+
+	public function changeEmail($user_id, $new_email)
+	{
+		$insertquery = sprintf('update users set email = "%s" where user_id = %s', $new_email, $user_id);
+		$this->db->query($insertquery);
+	}
+
+	public function changeUsername($user_id, $new_username)
+	{
+		$insertquery = sprintf('update users set username = "%s" where user_id = %s', $new_username, $user_id);
 		$this->db->query($insertquery);
 	}
 }
