@@ -1,7 +1,7 @@
 
 
 <div class="container-fluid">
-    <form method='get' action='<?php echo base_url().'/Products/searchProducts' ;?>'>
+    <form method='get' action='<?php echo base_url().'Products/searchProducts' ;?>'>
     <div class="row">
         <div class="col-8">
             <div class="form-group">
@@ -14,9 +14,7 @@
             <div class="row justify-content-between ">
                 <button  type="submit" class="btn btn-primary ml-3">Search</button>
             </div>
-        
         </div>
-
     </div>
     </form>
 </div>
