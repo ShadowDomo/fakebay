@@ -24,21 +24,23 @@
     <!-- right hand side with auction -->
     <div class="col-4">
 
-        <?php 
-
-        if ($bid_history->result()[0]->user_ID == $this->session->user_id &&
-                $total_seconds > 0) {
+        <?php
+         if ($bid_history->result() != NULL) {
+            if ($bid_history->result()[0]->user_ID == $this->session->user_id && $total_seconds > 0) {
             ?> 
             <h5 class="alert alert-success">You are currently the highest bidder! </h5>
-        <?php } elseif ($bid_history->result()[0]->user_ID == $this->session->user_id &&
-                $total_seconds < 0) {
+            <?php } elseif ($bid_history->result()[0]->user_ID == $this->session->user_id &&
+            $total_seconds < 0) {
             ?> 
             <h5 class="alert alert-success">You won this auction with the highest bid of <?php echo 
             $bid_history->result()[0]->bid_price;
             ?> </h5>
-        }
+            <?php }
+        } 
+
+         ?>
         
-        ?>
+        
         <h5>Current Price   :</h5>
         <p><?php echo "$ {$product_details->current_price} " ?></p>
         <h5>Seller:</h5>

@@ -55,11 +55,56 @@ class Products extends CI_Controller {
 		$this->viewProductProper($product_id);
 	}
 
+	// makes a listing for a product
+	public function makeListing() {
+	
+
+		$product_name = $this->input->post("product_name");
+		$starting_price = $this->input->post("starting_price");
+		$end_date = $this->input->post("end_date");
+		$end_time = $this->input->post("end_time");
+		$description = $this->input->post("description");
+
+		$datetime = date('Y-m-d H:i:s', strtotime("$end_date $end_time"));
+		$filename = $this->input->post("uploaded_file");
+		$currenttime = md5(time());
+		$product_nameencrypt = md5($product_name);
+		
+		$filename = md5("{$currenttime}{$product_nameencrypt}");
+		// upload config
+		$config['upload_path']   = 'assets/'; 
+		$config['allowed_types'] = 'jpg|png|jpeg|JPG|JPEG|PNG'; 
+		$config['max_size']      = 2048; 
+		$config['max_width']     = 1024; 
+		$config['max_height']    = 768; 
+		$config['file_name'] = $filename;
+		$this->load->library('upload', $config);
+
+		// upload file
+		if (!$this->upload->do_upload('uploaded_file')) {
+			echo $this->upload->display_errors();
+			return;
+		} else {
+			$data = array('upload_data' => $this->upload->data());
+		}
+
+		$product_Id = $this->product_model->createListing($product_name, $description, $starting_price,
+	$this->upload->data()['file_name'], $this->session->user_id, $datetime);
+		echo $product_Id;
+	}
+
+	// opens the listing page
+	public function viewListPage() {
+		$this->load->view('templates/header');
+		$this->load->view('product/searchbar');
+		$this->load->view('product/listing');
+		$this->load->view('templates/footer');
+	}
+
 	// gets input from searchbar
 	public function viewProduct() {
 		$product_id = $this->input->get("product_id");
 		
-
 		// $data['product_id'] = $product_id;
 		$this->viewProductProper($product_id);
 	}
@@ -83,20 +128,18 @@ class Products extends CI_Controller {
 		$seconds = 0;
 		$days = 0;
 
-		if ($auction_end_in_days >= 1) {
-			$days = floor($auction_end_in_days);
-		}
+		$days = floor($auction_end_in_days);
 		$auction_end_in_hours -= $days * 24;
 
-		if ($auction_end_in_hours >= 1) {
-			$hours = floor($auction_end_in_hours);
-		}
+		$hours = floor($auction_end_in_hours);
 		$auction_end_in_minutes -= $hours * 60;
+		$auction_end_in_minutes -= $days * 24 * 60;
 
-		if ($auction_end_in_minutes >= 1) {
-			$minutes = floor($auction_end_in_minutes);
-		}
+		$minutes = floor($auction_end_in_minutes);
 		$auction_end_in_seconds -= $minutes * 60;
+		$auction_end_in_seconds -= $days * 24 * 60 * 60;
+		$auction_end_in_seconds -= $hours * 60 * 60;
+
 		$seconds = $auction_end_in_seconds;
 
 		$data['hours'] = $hours;

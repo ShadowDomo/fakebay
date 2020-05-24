@@ -60,6 +60,12 @@ class Login_model extends CI_Model
 		return true;
 	}
 
+	// gets the phone number associated with the user
+	public function getPhoneNumber($user_ID) {
+		$query = "select phone_number from users where user_id = {$user_ID}";
+		$result = $this->db->query($query)->row()->phone_number;
+		return $result;
+	}
 
 
 	// checks if the details are valid for registration

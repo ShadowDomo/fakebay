@@ -10,10 +10,22 @@ class Login extends CI_Controller {
 		// probs dont need these two?
 		$this->load->helper('url_helper'); 
 		$this->load->helper('form');
+		$this->load->library('SMS');
+	}
+
+	// generates secret code for Two-Factor Authentication
+	public function generateSecretCode() {
+		// should have 60 seconds before the number is changed
+		srand(floor(time() / 60));
+		$num = rand(100000,999999);
+		// echo $num;
+		return $num;
 	}
 
 	public function index(){
+
 		// if session already set redirect to profile
+
 		if ($this->session->has_userdata('user_id')) {
 			$this->viewProfile();
 			return;
@@ -27,6 +39,7 @@ class Login extends CI_Controller {
 
 	// opens user profile
 	public function viewProfile() {
+
 		$data['user_details'] = $this->login_model->getUserDetails($this->session->user_id);
 
 		$this->load->view('templates/header');
@@ -45,15 +58,40 @@ class Login extends CI_Controller {
 		$this->load->view('templates/footer');
 	}
 
+	// loads 2fa
+	public function twoFactor($user_id) {
+		$this->load->view('templates/header');
+		$this->load->view('login/authentication');
 
+		// generates code and sends text
+		$secret = $this->generateSecretCode();
+		$phoneNumber = $this->login_model->getPhoneNumber($user_id);
+		$this->sms->sendMessage($phoneNumber, $secret);
+		$this->load->view('templates/footer');
+	}
+
+	// checks authentication 
+	public function checkTwoFactor() {
+		$secret = $this->input->post("secret");
+		if ($secret == strval($this->generateSecretCode())) {
+			$this->session->set_userdata('user_id', $this->session->logged_in);
+			$this->session->unset_userdata('logged_in');
+			$this->viewProfile();
+		} else {
+			// didn't work - try again
+			$this->session->set_userdata('error', "two factor");
+			$this->twoFactor($this->session->logged_in);
+		}
+	}
+	
 	// user login
 	public function login() {
 		$email = $this->input->post("email");
 		$password = $this->input->post("password");
 		
 		if ($data = $this->login_model->checkLogin($email, $password)) {
-			$this->session->set_userdata('user_id', $data['user_id']);
-			$this->viewProfile();
+			$this->session->set_userdata('logged_in', $data['user_id']);
+			$this->twoFactor($data['user_id']);
 			return;
 		}
 		$data['error'] = "invalid";

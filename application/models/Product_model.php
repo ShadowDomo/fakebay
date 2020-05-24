@@ -8,6 +8,18 @@ class Product_model extends CI_Model
 		$this->load->database();
 	}
 
+	// creates a new listing for a product and returns the new product_ID
+	public function createListing($name, $desc, $price, $filename, $seller_id, $end_datetime){
+		$query = "insert into products (product_name, description, current_price
+		, image_filename, seller_id, end_datetime) values ('{$name}', '{$desc}', {$price}, '{$filename}',
+		{$seller_id}, '{$end_datetime}')";
+		$this->db->query($query);
+
+		$idquery = "select product_id from products order by product_id desc limit 1";
+		$result = $this->db->query($idquery)->row()->product_id;
+		return $result;
+	}
+
 	// retrieves the bidding history for an item
 	public function getBidHistory($product_id) {
 		$query = sprintf('select * from product_bids where product_ID = %s order by bid_price desc limit 5', 

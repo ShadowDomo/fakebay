@@ -1,5 +1,5 @@
 
-
+<!-- TODO make already sold items not appear in search results -->
 <div class="container-fluid">
     <form method='get' action='<?php echo base_url().'Products/searchProducts' ;?>'>
     <div class="row">

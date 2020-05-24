@@ -12,12 +12,12 @@
     <div class="container-fluid">
         <div class="row alert alert-warning mb-0" awd>
             <div class="col-md-2 "></div>
-            <div class="col-md-6 ">
+            <div class="col-md-4 ">
                 <h2>Welcome to Fakebay</h2>
 
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <div class="row d-flex justify-content-end">
                     <?php 
 						if (!$this->session->has_userdata('user_id')) {
@@ -30,6 +30,10 @@
                             <?php echo form_close();
 							
 						} else {
+                            echo form_open('Products/viewListPage'); ?>
+                            <button name="submit" type="submit" class="btn btn-link" value="listing">Sell something</button>
+                            <?php echo form_close();
+
                             echo form_open('Login/viewProfile'); ?>
                             <button name="submit" type="submit" class="btn btn-link" value="profile">My Profile</button>
                             <?php echo form_close();
@@ -38,9 +42,6 @@
                             <button name="submit" type="submit" class="btn btn-link" value="logout">Logout</button>
                             <?php echo form_close();
 						}
-						
-						
-
 					?>
                 </div>
 
