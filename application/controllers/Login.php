@@ -13,17 +13,18 @@ class Login extends CI_Controller {
 		$this->load->library('SMS');
 	}
 
-	// generates secret code for Two-Factor Authentication
-	public function generateSecretCode() {
+	// generates secret code for Two-Factor Authentication.
+	// secret code has the time as a seed so the same key is generated 
+	// within the same 60 second period. 
+	public function generateSecretCode($user_id) {
 		// should have 60 seconds before the number is changed
-		srand(floor(time() / 60));
+		srand(floor(time() / 60) + intval($user_id));
 		$num = rand(100000,999999);
 		// echo $num;
 		return $num;
 	}
 
 	public function index(){
-
 		// if session already set redirect to profile
 
 		if ($this->session->has_userdata('user_id')) {
@@ -64,7 +65,7 @@ class Login extends CI_Controller {
 		$this->load->view('login/authentication');
 
 		// generates code and sends text
-		$secret = $this->generateSecretCode();
+		$secret = $this->generateSecretCode($user_id);
 		$phoneNumber = $this->login_model->getPhoneNumber($user_id);
 		$this->sms->sendMessage($phoneNumber, $secret);
 		$this->load->view('templates/footer');
@@ -73,7 +74,7 @@ class Login extends CI_Controller {
 	// checks authentication 
 	public function checkTwoFactor() {
 		$secret = $this->input->post("secret");
-		if ($secret == strval($this->generateSecretCode())) {
+		if ($secret == strval($this->generateSecretCode($this->session->logged_in))) {
 			$this->session->set_userdata('user_id', $this->session->logged_in);
 			$this->session->unset_userdata('logged_in');
 			$this->viewProfile();
@@ -159,7 +160,6 @@ class Login extends CI_Controller {
 			// echo "password not correct";
 			return 'password_incorrect';
 		}
-
 		
 		if ($email != $userdetails->email) {
 			$email_needs_changing = true;
@@ -174,8 +174,6 @@ class Login extends CI_Controller {
 			// echo 'invalid email';
 			return 'email_invalid';
 		}
-		
-		
 
 		if ($username_needs_changing && !$this->login_model->checkNewUsernameValid($username)) {
 		
@@ -209,6 +207,7 @@ class Login extends CI_Controller {
 		$password = $this->input->post("password");
 		$confirmedpassword = $this->input->post("confirmed_password");
 		$username = $this->input->post("username");
+		$phone_number = $this->input->post("phone_number");
 
 		// check if the password is valid
 		$validpassword = ($confirmedpassword == $password) ? true : false;
@@ -216,13 +215,25 @@ class Login extends CI_Controller {
 		// check if username and email are valid
 		$validdeets = $this->login_model->checkRegistration($email, $username);
 
+		// check if the phone number is of the correct length
+		$validnumber = TRUE;
+		if (strlen($phone_number) != 10) {
+			$validnumber = FALSE;
+		}
+
 		// register user if details are valid
 		if ($validpassword) {
 			if ($validdeets) {
-				$this->login_model->registerUser($email, $username, $password);
-			
-				// TODO should probs put a alert saying success
-				$this->index();
+				if ($validnumber) {
+					$this->login_model->registerUser($email, $username, $password, $phone_number);
+					// TODO should probs put a alert saying success
+					$this->index();
+					return;
+				}
+				$data['error'] = "phone error";
+				$this->load->view('templates/header');
+				$this->load->view('login/register', $data);
+				$this->load->view('templates/footer');
 				return;
 			} 
 			$data['error'] = "usernameemailerror";
@@ -236,6 +247,7 @@ class Login extends CI_Controller {
 		$this->load->view('templates/header');
 		$this->load->view('login/register', $data);
 		$this->load->view('templates/footer');
+		return;
 	}
 
 	// checks whether login or register button clicked

@@ -12,6 +12,11 @@
                 <label for="email">Username:</label>
                 <input type="text" name="username" class="form-control" id="username" placeholder="username">
             </div>
+            
+             <div class="form-group">
+                <label for="phone_number">Phone Number:</label>
+                <input type="text" name="phone_number" class="form-control" id="phone_number" placeholder="0412345678">
+            </div>
             <div class="form-group">
                 <label for="password">Password:</label>
                 <input type="password" name="password" class="form-control" id="password" placeholder="*******">
@@ -31,7 +36,9 @@
 					echo '<div class="alert alert-warning">Passwords do not match. Please try again!</div>';
 				} else if ($error == "usernameemailerror") {
 					echo '<div class="alert alert-warning">Invalid username or email. Please try again!</div>';
-				}
+				} else if ($error == "phone error") {
+                    echo '<div class="alert alert-warning">Invalid phone number! Please try again!</div>';
+                }
 			?>
             <?php echo form_close(); ?>
         </div>

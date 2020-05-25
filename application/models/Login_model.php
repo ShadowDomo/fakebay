@@ -75,10 +75,10 @@ class Login_model extends CI_Model
 	}
 
 	// registers a user 
-	public function registerUser($email, $username, $password)
+	public function registerUser($email, $username, $password, $phone_number)
 	{
 		$hashed = password_hash($password, PASSWORD_BCRYPT);
-		$insertquery = sprintf('insert into users (email, password, username) values ("%s", "%s", "%s")', $email, $hashed, $username);
+		$insertquery = "insert into users (email, password, username, phone_number) values ('{$email}', '{$hashed}', '{$username}', '{$phone_number}')";
 		$this->db->query($insertquery);
 	}
 
