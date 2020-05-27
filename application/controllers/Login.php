@@ -2,6 +2,13 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Login extends CI_Controller {
+
+	// how long the user can remain idle before being kicked
+	private $timeout_time;
+
+	// big number
+	private $infinity;
+
 	public function __construct()
 	{
 		parent::__construct();
@@ -11,6 +18,20 @@ class Login extends CI_Controller {
 		$this->load->helper('url_helper'); 
 		$this->load->helper('form');
 		$this->load->library('SMS');
+
+		$this->timeout_time = 6;
+		$this->infinity = 9999999999999999;
+	}
+
+	// tells javascript to log you out when you run out of time
+	public function timeout() {
+		$this->session->time_remaining -= 1;
+
+		if ($this->session->time_remaining < 1) {
+			echo 'logout';
+		} else {
+			echo $this->session->time_remaining;
+		}
 	}
 
 	// generates secret code for Two-Factor Authentication.
@@ -26,20 +47,36 @@ class Login extends CI_Controller {
 
 	public function index(){
 		// if session already set redirect to profile
-
 		if ($this->session->has_userdata('user_id')) {
 			$this->viewProfile();
 			return;
 		}
+		$this->session->time_remaining = $this->infinity;
 		$data['error'] = "none";
 		$this->load->view('templates/header');
 		$this->load->view('login/login', $data);
 		$this->load->view('templates/footer');
+	}
 
+	// redirects to login page if not logged in
+	// returns true if not logged in
+	public function notLoggedIn() {
+		if (!$this->session->has_userdata('user_id')) {
+			// $data['error'] = "none";
+			// $this->load->view('templates/header');
+			// $this->load->view('login/login', $data);
+			// $this->load->view('templates/footer');
+			return redirect()->to('Login');
+		}
+		return false;
 	}
 
 	// opens user profile
 	public function viewProfile() {
+		if ($this->notLoggedIn()) {
+			return;
+		}
+		$this->session->set_userdata('time_remaining', $this->timeout_time);
 
 		$data['user_details'] = $this->login_model->getUserDetails($this->session->user_id);
 
@@ -51,6 +88,10 @@ class Login extends CI_Controller {
 
 	// edit user profile
 	public function openEditProfile($error = 'none') {
+		if ($this->notLoggedIn()) {
+			return;
+		}
+		$this->session->set_userdata('time_remaining', $this->timeout_time);
 		$data['user_details'] = $this->login_model->getUserDetails($this->session->user_id);
 		$data['error'] = $error;
 		$this->load->view('templates/header');
@@ -92,13 +133,15 @@ class Login extends CI_Controller {
 		
 		if ($data = $this->login_model->checkLogin($email, $password)) {
 			$this->session->set_userdata('logged_in', $data['user_id']);
-			// $this->twoFactor($data['user_id']); TODO uncomment for 2fa
+			$this->session->set_userdata('time_remaining', $this->timeout_time);
+			// $this->twoFactor($data['user_id']); //TODO uncomment for 2fa
 
 			// comment following 2 lines for 2fa
 			$this->session->set_userdata('user_id', $data['user_id']);
 			$this->viewProfile();
 			return;
 		}
+		$this->session->set_userdata('logged_in', 99999999999);
 		$data['error'] = "invalid";
 		$this->load->view('templates/header');
 		$this->load->view('login/login', $data);
@@ -108,12 +151,15 @@ class Login extends CI_Controller {
 
 	// logs the user out, clears session data
 	public function logout() {
+		$this->session->set_userdata('logged_in', 9999999999999);
 		$this->session->unset_userdata('user_id');
 		$this->index();
 	}
 
 
 	public function checkEditProfile() {
+		$this->session->set_userdata('time_remaining', $this->timeout_time);
+
 		$data['email'] = $this->input->post("email");
 		$data['username'] = $this->input->post("username");
 		$data['phone_number'] = $this->input->post("phone_number");
@@ -135,6 +181,11 @@ class Login extends CI_Controller {
 
 	// returns true on success, false otherwise
 	public function editProfile($data) {
+		$this->session->set_userdata('time_remaining', $this->timeout_time);
+
+		if ($this->notLoggedIn()) {
+			return;
+		}
 		$email = $data['email'];
 		$username = $data['username'];
 		$phone_number = $data['phone_number'];
@@ -275,7 +326,6 @@ class Login extends CI_Controller {
 
 	// checks whether login or register button clicked
 	public function formChecker() {
-
 		if ($this->session->has_userdata('user_id')) {
 			$this->viewProfile();
 			return;

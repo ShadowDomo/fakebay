@@ -2,16 +2,36 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Products extends CI_Controller {
+
+
+	private $timeout_time;
+
 	public function __construct()
 	{
 		parent::__construct();
 		$this->load->model('product_model');
 		$this->load->helper('url_helper');
 		$this->load->helper('form');
+		$this->timeout_time = 6;
+	}
+
+	// redirects to login page if not logged in
+	// returns true if not logged in
+	public function notLoggedIn() {
+		if (!$this->session->has_userdata('user_id')) {
+			// $data['error'] = "none";
+			// $this->load->view('templates/header');
+			// $this->load->view('login/login', $data);
+			// $this->load->view('templates/footer');
+			return redirect()->to('Login');
+		}
+		return false;
 	}
 
 	// search for products
 	public function searchProducts() {
+		$this->session->set_userdata('time_remaining', $this->timeout_time);
+
 		$searchterm = $this->input->get("search");
 		$results = $this->product_model->search($searchterm);
 		// echo $searchterm;
@@ -25,9 +45,16 @@ class Products extends CI_Controller {
 
 	// makes a bid on a product
 	public function makeBid() {
+		$this->session->set_userdata('time_remaining', $this->timeout_time);
+
 		$bid_price = $this->input->post("bid_price");
 		$product_id = $this->uri->segment(3);
 		$user_id = $this->session->user_id;
+
+		// ensure only logged in can continue
+		// if ($this->notLoggedIn()) {
+		// 	return;
+		// }
 
 		// check if time is valid. 
 		$end_time_in_secs = $this->product_model->auctionEndSeconds($product_id)->sec;
@@ -38,7 +65,7 @@ class Products extends CI_Controller {
 		}
 
 		$current_price = $this->product_model->getCurrentPrice($product_id);
-		if ($bid_price < $current_price || !is_numeric($bid_price)) {
+		if ($bid_price <= $current_price || !is_numeric($bid_price)) {
 			// error - bid price is too low
 			$this->session->set_userdata('error', "bid error");
 			$this->viewProductProper($product_id);
@@ -51,7 +78,11 @@ class Products extends CI_Controller {
 
 	// makes a listing for a product
 	public function makeListing() {
-	
+		$this->session->set_userdata('time_remaining', $this->timeout_time);
+
+		if ($this->notLoggedIn()) {
+			return;
+		};
 
 		$product_name = $this->input->post("product_name");
 		$starting_price = $this->input->post("starting_price");
@@ -83,13 +114,16 @@ class Products extends CI_Controller {
 		}
 
 		$product_Id = $this->product_model->createListing($product_name, $description, $starting_price,
-	$this->upload->data()['file_name'], $this->session->user_id, $datetime);
+		$this->upload->data()['file_name'], $this->session->user_id, $datetime);
 		// echo $product_Id;
 		$this->viewProductProper($product_Id);
+		// $this->viewProduct();
 	}
 
 	// opens the listing page
 	public function viewListPage() {
+		$this->session->set_userdata('time_remaining', $this->timeout_time);
+
 		$this->load->view('templates/header');
 		$this->load->view('product/searchbar');
 		$this->load->view('product/listing');
@@ -98,7 +132,11 @@ class Products extends CI_Controller {
 
 	// gets input from searchbar
 	public function viewProduct() {
+		$ajax = $this->input->get("ajax");
 		$product_id = $this->input->get("product_id");
+		if (isset($this->session->user_id) && $ajax != "true") {
+			$this->session->set_userdata('time_remaining', $this->timeout_time);
+		}
 		
 		// $data['product_id'] = $product_id;
 		$this->viewProductProper($product_id);
@@ -117,6 +155,7 @@ class Products extends CI_Controller {
 		$auction_end_in_minutes = $auction_end_in_seconds / 60;
 		$auction_end_in_hours = $auction_end_in_minutes / 60;
 		$auction_end_in_days = $auction_end_in_hours / 24;
+
 		// todo make it countdown live
 		$hours = 0;
 		$minutes = 0;
@@ -149,10 +188,12 @@ class Products extends CI_Controller {
 	}
 
 	public function index(){
+		if (isset($this->session->user_id)) {
+			$this->session->set_userdata('time_remaining', $this->timeout_time);
+		}
 		$data['error'] = "none";
 		$this->load->view('templates/header');
 		$this->load->view('product/searchbar');
 		$this->load->view('templates/footer');
-
 	}
 }

@@ -28,18 +28,19 @@ class Product_model extends CI_Model
 
 	// searches for products which have closely matching titles
 	public function search($searchterm) {
+		$searchterm = strtolower($searchterm);
 		$all_results = $this->db->query("select * from products");
 		$array = array();
 		// somewhat fuzzy search
 		foreach ($all_results->result() as $row) {
-			similar_text($row->product_name, $searchterm, $perc);
+			similar_text(strtolower($row->product_name), $searchterm, $perc);
 			if ($perc > 30) {
 				$n = 1;
 				$metone = metaphone($searchterm);
 				$mettwo = metaphone($row->product_name);
 				$le = levenshtein($metone, $mettwo);
         		$n = 100 * (strlen($mettwo) - $le) / strlen($mettwo);
-				if ($n > 35) {
+				if ($n > 20) {
 					$perc += $n;
 					$array[$row->product_id] = array($row, $perc);
 				}
