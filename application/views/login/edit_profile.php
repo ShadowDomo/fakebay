@@ -17,7 +17,11 @@
             </div>
             <div class="form-group">
                 <label for="email">Username:</label>
-                <input type="text" name="username" class="form-control" id="username"value="<?php echo $user_details->username?>">
+                <input type="text" name="username" class="form-control" id="username" value="<?php echo $user_details->username?>">
+            </div>
+            <div class="form-group">
+                <label for="phone_number">Phone Number:</label>
+                <input type="text" name="phone_number" class="form-control" id="phone_number" value="<?php echo $user_details->phone_number?>">
             </div>
             <div class="form-group">
                 <label for="password">Current password:</label>
@@ -34,20 +38,19 @@
             </div>
             <div class="row justify-content-between ">
                 <button name="submit" type="submit" class="btn btn-primary ml-3" value="submit">Submit</button>
-                <!-- <button name="submit" type="submit" class="btn btn-primary" value="register">Register</button> -->
             </div>
 
             <?php
-                // echo $error;
                 if ($error != 'none') {
                     echo '<br>';
                     if ($error == "password_not_same") {
                         echo '<div class="alert alert-warning">Passwords do not match. Please try again!</div>';
                     } elseif ($error == "email_invalid" || $error == "invalid_username") {
-                        
                         echo '<div class="alert alert-warning">Invalid email or username. Please try again!</div>';
-                    } elseif ($error = "password_incorrect") {
+                    } elseif ($error == "password_incorrect") {
                         echo '<div class="alert alert-warning">Password incorrect. Please try again!</div>';
+                    } elseif ($error == "phone invalid") {
+                        echo '<div class="alert alert-warning">Phone number invalid. Please try again!</div>';
                     } else {
                         echo '';
                     }

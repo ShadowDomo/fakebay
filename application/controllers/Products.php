@@ -20,12 +20,6 @@ class Products extends CI_Controller {
 		$this->load->view('product/searchbar');
 		$this->load->view('product/results', $data);
 		
-		// foreach ($results->result() as $row) {
-			
-		// 	echo $row->product_id . '<br>';
-		// 	echo $row->product_name . '<br>';
-		// 	echo $row->description . '<br>';
-		// }
 		$this->load->view('templates/footer');
 	}
 

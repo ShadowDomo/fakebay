@@ -92,7 +92,11 @@ class Login extends CI_Controller {
 		
 		if ($data = $this->login_model->checkLogin($email, $password)) {
 			$this->session->set_userdata('logged_in', $data['user_id']);
-			$this->twoFactor($data['user_id']);
+			// $this->twoFactor($data['user_id']); TODO uncomment for 2fa
+
+			// comment following 2 lines for 2fa
+			$this->session->set_userdata('user_id', $data['user_id']);
+			$this->viewProfile();
 			return;
 		}
 		$data['error'] = "invalid";
@@ -112,10 +116,12 @@ class Login extends CI_Controller {
 	public function checkEditProfile() {
 		$data['email'] = $this->input->post("email");
 		$data['username'] = $this->input->post("username");
+		$data['phone_number'] = $this->input->post("phone_number");
 		$data['current_password'] = $this->input->post("current_password");
 		$data['new_password'] = $this->input->post("new_password");
 		$data['confirmed_password'] = $this->input->post("confirmed_password");
 
+		// gets the current details for the user
 		$data['userdetails'] = $this->login_model->getUserDetails($this->session->user_id);
 
 		$result = $this->editProfile($data);
@@ -126,19 +132,22 @@ class Login extends CI_Controller {
 		$this->openEditProfile($result);
 
 	}
+
 	// returns true on success, false otherwise
 	public function editProfile($data) {
 		$email = $data['email'];
 		$username = $data['username'];
+		$phone_number = $data['phone_number'];
 		$current_password = $data['current_password'];
 		$new_password = $data['new_password'];
 		$confirmed_password = $data['confirmed_password'];
 
-		$userdetails = $this->login_model->getUserDetails($this->session->user_id);
+		$userdetails = $data['userdetails'];
 
 		$email_needs_changing = false;
 		$username_needs_changing = false;
 		$password_needs_changing = false;
+		$number_needs_changing = false;
 		
 		// if confirmed isn't the same
 		if ($new_password != $confirmed_password) {
@@ -169,12 +178,22 @@ class Login extends CI_Controller {
 			$username_needs_changing = true;
 		}
 
+		if ($phone_number != $userdetails->phone_number) {
+			$number_needs_changing = true;
+		}
+
+		// check if phone number is valid
+		if (strlen($phone_number) != 10) {
+			return 'phone invalid';
+		}
+
 		// check if new email is valid
 		if ($email_needs_changing && !$this->login_model->checkNewEmailValid($email)) {
 			// echo 'invalid email';
 			return 'email_invalid';
 		}
 
+		// check if username is valid
 		if ($username_needs_changing && !$this->login_model->checkNewUsernameValid($username)) {
 		
 			// echo 'invalid username';
@@ -190,6 +209,10 @@ class Login extends CI_Controller {
 		if ($email_needs_changing) {
 			$this->login_model->changeEmail($this->session->user_id, $email);
 			// echo 'email changed';
+		}
+
+		if ($number_needs_changing) {
+			$this->login_model->changePhoneNumber($this->session->user_id, $phone_number);
 		}
 
 		// change password if needed
