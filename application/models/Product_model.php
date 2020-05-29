@@ -53,10 +53,6 @@ class Product_model extends CI_Model
 			return $b[1] - $a[1];
 		});
 		
-
-		// $searchterm = $this->db->escape_like_str($searchterm);
-		// $query = "select * from products where product_name like ?";
-		// $results = $this->db->query($query, array("%{$searchterm}%"));
 		return $array;
 	}
 
@@ -73,6 +69,13 @@ class Product_model extends CI_Model
 	public function getDetails($product_id) {
 		$query = sprintf('select * from products where product_id = ?');
 		$result = $this->db->query($query, array($product_id))->row();
+		return $result;
+	}
+
+	// retrieves the photos for a listing
+	public function getPhotos($product_id) {
+		$query = "select * from photos where product_id = ?";
+		$result = $this->db->query($query, array($product_id));
 		return $result;
 	}
 

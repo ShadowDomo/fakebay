@@ -275,16 +275,58 @@ class Login extends CI_Controller {
 		return;
 	}
 
+	 /** Returns true if the password satisfies requirements
+	  * Requirements: At least 8 characters, need atleast one capital,
+	  * need a number.
+	 */
+	public function checkPasswordRequirements($password, $confirmed_password) {
+		$minimum_length = 8;
+		// check if passwords match
+		if ($password !== $confirmed_password) {
+			$this->session->set_userdata('error', 'dont match Passwords do not match! Please try again.');
+			return false;
+		}
+
+		// check password length
+		if (strlen($password) < $minimum_length) {
+			$this->session->set_userdata('error', 'length Password does not meet requirements. Please try again');
+			return false;
+		}
+
+		// checks if there is atleast one capital letter
+		if (strtolower($password) == $password) {
+			$this->session->set_userdata('error', ' capital Password does not meet requirements. Please try again');
+			return false;
+		}
+
+		// checks if there is atleast one number
+		$is_num = false;
+		for ($i = 0; $i < 9; ++$i) {
+			if (strpos($password, strval($i)) !== FALSE) {
+				$is_num = true;
+			}
+		}
+		if ($is_num === FALSE) {
+			$this->session->set_userdata('error', 'no number Password does not meet requirements. Please try again');
+			return false;
+		}
+
+		$this->session->unset_userdata('error');
+
+		// password satisfies requirements
+		return true;
+	}
+
 	// registers a user
 	public function register() {
 		$email = $this->input->post("email");
 		$password = $this->input->post("password");
-		$confirmedpassword = $this->input->post("confirmed_password");
+		$confirmed_password = $this->input->post("confirmed_password");
 		$username = $this->input->post("username");
 		$phone_number = $this->input->post("phone_number");
 
-		// check if the password is valid
-		$validpassword = ($confirmedpassword == $password) ? true : false;
+		// check if password meets requirments
+		$validpassword = $this->checkPasswordRequirements($password, $confirmed_password);
 
 		// check if username and email are valid
 		$validdeets = $this->login_model->checkRegistration($email, $username);
@@ -304,22 +346,21 @@ class Login extends CI_Controller {
 					$this->index();
 					return;
 				}
-				$data['error'] = "phone error";
+				$this->session->set_userdata('error', 'Phone number is not valid! Please try again.');
 				$this->load->view('templates/header');
-				$this->load->view('login/register', $data);
+				$this->load->view('login/register');
 				$this->load->view('templates/footer');
 				return;
 			} 
-			$data['error'] = "usernameemailerror";
+			$this->session->set_userdata('error', 'Invalid username or email. Please try again.');
 			$this->load->view('templates/header');
-			$this->load->view('login/register', $data);
+			$this->load->view('login/register');
 			$this->load->view('templates/footer');
 			return;
 		} 
 		// is not clean if passwords do not match
-		$data['error'] = "passworderror";
 		$this->load->view('templates/header');
-		$this->load->view('login/register', $data);
+		$this->load->view('login/register');
 		$this->load->view('templates/footer');
 		return;
 	}

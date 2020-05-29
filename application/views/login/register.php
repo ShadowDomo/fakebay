@@ -32,12 +32,11 @@
             </div>
 
             <?php
-				if ($error == "passworderror") {
-					echo '<div class="alert alert-warning">Passwords do not match. Please try again!</div>';
-				} else if ($error == "usernameemailerror") {
-					echo '<div class="alert alert-warning">Invalid username or email. Please try again!</div>';
-				} else if ($error == "phone error") {
-                    echo '<div class="alert alert-warning">Invalid phone number! Please try again!</div>';
+				if (isset($this->session->error)) {
+                    echo '<br>';
+                    echo '<div class="alert alert-warning">';
+                    echo $this->session->error;
+                    echo '</div>';
                 }
 			?>
             <?php echo form_close(); ?>

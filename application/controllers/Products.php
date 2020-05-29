@@ -115,9 +115,7 @@ class Products extends CI_Controller {
 
 		$product_Id = $this->product_model->createListing($product_name, $description, $starting_price,
 		$this->upload->data()['file_name'], $this->session->user_id, $datetime);
-		// echo $product_Id;
 		$this->viewProductProper($product_Id);
-		// $this->viewProduct();
 	}
 
 	// opens the listing page

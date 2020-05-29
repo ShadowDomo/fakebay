@@ -8,9 +8,9 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
         integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous">
     </script>
-    <script
+    <!-- <script
             src="https://www.paypal.com/sdk/js?client-id=AePRm1rdA51yIgECneOiet1gCCGoljdrcrmK4UFmYD_x2ntmyBch9sq35bgkNiyj89LJaH-jeZYAb5yE">
-    </script>
+    </script> -->
 
     <script>
     
