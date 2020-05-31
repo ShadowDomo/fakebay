@@ -9,14 +9,22 @@ class Product_model extends CI_Model
 	}
 
 	// creates a new listing for a product and returns the new product_ID
-	public function createListing($name, $desc, $price, $filename, $seller_id, $end_datetime){
-		$query = "insert into products (product_name, description, current_price
-		, image_filename, seller_id, end_datetime) values (?, ?, ?, ?, ?, ?)";
-		$this->db->query($query, array($name, $desc, $price, $filename, $seller_id, $end_datetime));
+	public function createListing($name, $desc, $price, $filenames, $seller_id, $end_datetime) {
+		// add new product
+		$query = "insert into products (product_name, description, current_price, seller_id, end_datetime) values (?, ?, ?, ?, ?)";
+		$this->db->query($query, array($name, $desc, $price, $seller_id, $end_datetime));
 
+		// get product id
 		$idquery = "select product_id from products order by product_id desc limit 1";
-		$result = $this->db->query($idquery)->row()->product_id;
-		return $result;
+		$product_id = $this->db->query($idquery)->row()->product_id;
+		// var_dump($filenames);
+		// add to photos
+		foreach ($filenames as $filename) {
+			$photo_query = "insert into photos (product_id, filename) values (?, ?)";
+			$this->db->query($photo_query, array($product_id, $filename));
+		}
+
+		return $product_id;
 	}
 
 	// retrieves the bidding history for an item

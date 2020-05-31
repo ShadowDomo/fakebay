@@ -37,6 +37,7 @@
                     echo '<div class="alert alert-warning">';
                     echo $this->session->error;
                     echo '</div>';
+                    $this->session->unset_userdata('error');
                 }
 			?>
             <?php echo form_close(); ?>

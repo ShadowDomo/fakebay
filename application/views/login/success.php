@@ -1,1 +1,1 @@
-<p>Success!!</p>
+<p><?php echo $message?></p>

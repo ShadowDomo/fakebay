@@ -1,3 +1,5 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/galleria/1.6.1/galleria.min.js"></script>
+
 <script>
 
 // disables input if auction has already ended
@@ -29,27 +31,46 @@ $(document).ready(function() {
     }, 1000);
 });
 
-
-
-
 </script>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/galleria/1.5.7/galleria.min.js"></script>
 
 <div class="row ">
     <!-- left hand side of page -->
-    <div class="col-8 ">
-        <h3> <?php echo ucfirst($product_details->product_name); ?></h3>
-        <!-- <br> -->
-        <img class="border border-danger img-fluid" src="<?php echo base_url() . 'assets/' . $product_details->image_filename ?>">
-        <br>
-        <br>
+    <div class="col-8">
+        <div class="row">
+            <div class="col-1"></div>
+            <div class="col-10 galleria">
+                 <h3> <?php echo ucfirst($product_details->product_name); ?></h3>
+                <!-- <br> -->
+                <?php 
+                // listing photos
+                    foreach ($photo_details->result() as $photo) {
+                        // echo $photo->filename;
+                        ?><img class="border border-danger img-fluid" src="<?php echo base_url() . 'assets/' . $photo->filename ?>">
+                    <?php }
+                ?>
+            </div>
+            <div class="col-1"></div>
+            <script>
+                (function() {
+                    Galleria.loadTheme('https://cdnjs.cloudflare.com/ajax/libs/galleria/1.5.7/themes/classic/galleria.classic.min.js');
+                    Galleria.run('.galleria');
+                }());
+            </script>
+        
+        </div>
+        <div class="row">
+            <div class="col">
+                <br>
+                    <br>
 
-        <h5>Description:</h5>
-        <p> <?php echo $product_details->description; ?> </p>
-
-
-
-
+                    <h5>Description:</h5>
+                    <p> <?php echo $product_details->description; ?> </p>
+            
+            </div>
+        </div>
+        
     </div>
 
     <!-- right hand side with auction -->

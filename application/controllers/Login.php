@@ -13,14 +13,41 @@ class Login extends CI_Controller {
 	{
 		parent::__construct();
 		$this->load->model('login_model');
-
+		$this->load->library('encryption');
 		// probs dont need these two?
 		$this->load->helper('url_helper'); 
 		$this->load->helper('form');
 		$this->load->library('SMS');
 
-		$this->timeout_time = 6;
+		$this->timeout_time = 600;
 		$this->infinity = 9999999999999999;
+	}
+
+	 // sends an email. Returns true on success, false otherwise.
+	 public function sendEmail($email, $subject, $message) {
+		$config = Array(
+			'protocol' => 'smtp',
+			'smtp_host' => 'ssl://smtp.googlemail.com',
+			'smtp_port' => 465,
+			'smtp_user' => 'infs3202project2020@gmail.com',
+			'smtp_pass' => 'iso-8859-1',
+			'mailtype'  => 'html', 
+			'charset'   => 'iso-8859-1'
+		);
+
+		$this->load->library('email', $config);
+		$this->email->set_newline("\r\n");
+
+		$this->email->from('infs3202project2020@gmail.com', 'Fakebay Admin');
+		$this->email->to($email);
+		$this->email->subject($subject);
+		$this->email->message($message);
+
+		if ($this->email->send()) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	// tells javascript to log you out when you run out of time
@@ -174,8 +201,14 @@ class Login extends CI_Controller {
 		if (!is_string($result)) {
 			$this->viewProfile();
 			return;
+		} else if ($result == 'pass changed') {
+			$this->load->view('templates/header');
+			$this->load->view('login/email_authentication');
+			$this->load->view('templates/footer');
+			return;
+		} else {
+			$this->openEditProfile($result);
 		}
-		$this->openEditProfile($result);
 
 	}
 
@@ -268,11 +301,84 @@ class Login extends CI_Controller {
 
 		// change password if needed
 		if ($password_needs_changing) {
-			$this->login_model->changePassword($this->session->user_id, $new_password);
-			// echo 'success';
+			$key = $this->makeAndStoreKey($this->session->user_id);
+			$this->encryption->initialize(array('key' => $key));
+			$secret = $this->encryption->encrypt($new_password);
+			// echo $secret;
+			// echo "\n";
+			// echo $key;
+			$secret = base64_encode($secret);
+
+			$text = "Please click on the link to confirm.\n" . base_url() . "Login/emailVerification?secret={$secret}&id={$this->session->user_id}";
+			$this->sendEmail($email, "Fakebay password change", $text);
+
+			return 'pass changed';
 		}
 
 		return;
+	}
+
+	// makes a key for user if doesnt exist. Returns key
+	public function makeAndStoreKey($user_id) {
+		$key = bin2hex($this->encryption->create_key(16));
+		$this->login_model->storeKey($user_id, $key);
+		$key = $this->login_model->getKey($user_id);
+		return $key;
+	}
+
+	
+
+	// Email verification
+	public function emailVerification() {
+		$secret = $this->input->get('secret');
+		$secret = base64_decode($secret);
+		$id = $this->input->get('id');
+
+		$key = $this->login_model->getKey($id);
+		$this->encryption->initialize(array('key' => $key));
+		$password = $this->encryption->decrypt($secret);
+		// echo $password;
+		if ($this->encryption->decrypt($secret) == false) {
+			$this->load->view('templates/header');
+			$this->load->view('login/failure');
+			$this->load->view('templates/footer');
+			return;
+		}
+		$this->login_model->changePassword($id, $password);
+		$data['message'] = "You have successfully changed your password.";
+		$this->load->view('templates/header');
+		$this->load->view('login/success', $data);
+		$this->load->view('templates/footer');
+		return;
+	}
+
+	// verifies the user for registration
+	public function verifyRegistration() {
+		$secret = $this->input->get('secret');
+		$secret = base64_decode($secret);
+		$id = $this->input->get('id');
+		
+		$key = $this->login_model->getKey($id);
+		$this->encryption->initialize(array('key' => $key));
+		$username = $this->encryption->decrypt($secret);
+
+		if ($this->encryption->decrypt($secret) == false) {
+			$this->load->view('templates/header');
+			$this->load->view('login/failure');
+			$this->load->view('templates/footer');
+			return;
+		}
+		if ($this->login_model->getUserDetails($id)->username == $username) {
+			$this->login_model->setVerificationStatus($id);
+			$data['message'] = "You have sucessfully been registered. You may now make listings.";
+
+			$this->load->view('templates/header');
+			$this->load->view('login/success', $data);
+			$this->load->view('templates/footer');
+			return;
+		}
+
+		
 	}
 
 	 /** Returns true if the password satisfies requirements
@@ -341,9 +447,22 @@ class Login extends CI_Controller {
 		if ($validpassword) {
 			if ($validdeets) {
 				if ($validnumber) {
-					$this->login_model->registerUser($email, $username, $password, $phone_number);
-					// TODO should probs put a alert saying success
-					$this->index();
+					$id = $this->login_model->registerUser($email, $username, $password, $phone_number);
+					$key = $this->makeAndStoreKey($id);
+					$this->encryption->initialize(array('key' => $key));
+					$secret = $this->encryption->encrypt($username);
+					$secret = base64_encode($secret);
+					// echo $secret;
+
+					$text = "Please visit the link to confirm registration.\n" . base_url() . "Login/verifyRegistration?secret={$secret}&id={$id}";
+					$this->sendEmail($email, "Fakebay Registration", $text);
+
+					// $this->index();
+					$data['message'] = "Please check your email for a verification link. You may not make listings until you are verified.";
+
+					$this->load->view('templates/header');
+					$this->load->view('login/success', $data);
+					$this->load->view('templates/footer');
 					return;
 				}
 				$this->session->set_userdata('error', 'Phone number is not valid! Please try again.');

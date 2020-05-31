@@ -36,6 +36,19 @@
                     <h5>Rating: <?php echo $user_details->seller_rating; ?></h5>
                 </div>
             </div>
+            <div class="row">
+                <div class="col">
+                    <h5>Verification Status: <?php 
+                        if ($user_details->verified == '1') {
+                            echo 'Verified';
+                        } else {
+                            echo 'Not verified';
+                        }
+                    
+                    ?></h5>
+                
+                </div>
+            </div>
         </div>
 
 

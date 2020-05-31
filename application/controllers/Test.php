@@ -8,54 +8,27 @@ class Test extends CI_Controller {
 		$this->load->model('product_model');
 		$this->load->helper('url_helper');
         $this->load->helper('form');
-        $this->load->library('Payment');
+		$this->load->library('Payment');
+		$this->load->library('encryption');
     }
 
 
-    public function checkPasswordRequirements($password, $confirmed_password) {
-		$minimum_length = 8;
-		// check if passwords match
-		if ($password !== $confirmed_password) {
-            echo "dont match";
-			return false;
-		}
-
-		// check password length
-		if (strlen($password) < $minimum_length) {
-            echo "len too short";
-            return false;
-		}
-
-		// checks if there is atleast one capital letter
-		if (strtolower($password) == $password) {
-            echo "no capital";
-            return false;
-        }
-
-		// checks if there is atleast one number
-		$is_num = false;
-		for ($i = 0; $i < 9; ++$i) {
-			if (strpos($password, strval($i)) !== FALSE) {
-				$is_num = true;
-			}
-		}
-		if ($is_num === FALSE) {
-            echo "no number";
-			return false;
-		}
-
-		$this->session->unset_userdata('error');
-
-        // password satisfies requirements
-        echo "good";
-		return true;
-	}
+    
     
     public function index() {
-        // $this->payment->index();
-        $password = "aaaaaaaA2";
-        $confirmed_password = $password;
-        $this->checkPasswordRequirements($password, $confirmed_password);
+		// $key = $this->encryption->create_key(16);
+		$key = "c4d23157404c7f8eb8adc18a5c5862c2";
+		// echo bin2hex($key);
+		// $this->login_model->storeKey($this->session->user_id, $key);
+		$this->encryption->initialize(array('key' => $key));
+		// $new_pass = "Fcac12312";
+		// $secret = $this->encryption->encrypt($new_pass);
+		$secret = "01441370dcf2f6034b8b97b2a795c342965c99a7291f8c109a72cf6eefbd80eed97545bf059d9bc9fe94bd227665d660d7753998050b8d9fec91e755fca087993ONQ6zBbdeSZfvXUpuXrtbU6aReZlJfc5rspfbR980o=";
+		// echo $secret;
+
+		$solved = $this->encryption->decrypt($secret);
+		echo $solved;
     }
-    
+	
+	
 }

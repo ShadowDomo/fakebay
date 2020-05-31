@@ -12,7 +12,7 @@ class Products extends CI_Controller {
 		$this->load->model('product_model');
 		$this->load->helper('url_helper');
 		$this->load->helper('form');
-		$this->timeout_time = 6;
+		$this->timeout_time = 600;
 	}
 
 	// redirects to login page if not logged in
@@ -41,6 +41,20 @@ class Products extends CI_Controller {
 		$this->load->view('product/results', $data);
 		
 		$this->load->view('templates/footer');
+	}
+
+
+	// retrieves the search results as json
+	public function getSearchResultsOnly() {
+		$searchterm = $this->input->get("searchterm");
+		if ($searchterm == '' || $searchterm == NULL) {
+			echo json_encode();
+			return;
+		}
+		$results = $this->product_model->search($searchterm);
+
+		// echo "searchterm was: " . $searchterm;
+		echo json_encode($results);
 	}
 
 	// makes a bid on a product
@@ -84,6 +98,7 @@ class Products extends CI_Controller {
 			return;
 		};
 
+		$num_photos = intval($this->input->post("count_files"));
 		$product_name = $this->input->post("product_name");
 		$starting_price = $this->input->post("starting_price");
 		$end_date = $this->input->post("end_date");
@@ -91,36 +106,81 @@ class Products extends CI_Controller {
 		$description = $this->input->post("description");
 
 		$datetime = date('Y-m-d H:i:s', strtotime("$end_date $end_time"));
-		$filename = $this->input->post("uploaded_file");
-		$currenttime = md5(time());
-		$product_nameencrypt = md5($product_name);
-		
-		$filename = md5("{$currenttime}{$product_nameencrypt}");
-		// upload config
-		$config['upload_path']   = 'assets/'; 
-		$config['allowed_types'] = 'jpg|png|jpeg|JPG|JPEG|PNG'; 
-		$config['max_size']      = 2048; 
-		$config['max_width']     = 1024; 
-		$config['max_height']    = 768; 
-		$config['file_name'] = $filename;
-		$this->load->library('upload', $config);
 
-		// upload file
-		if (!$this->upload->do_upload('uploaded_file')) {
-			echo $this->upload->display_errors();
+		// check starting price is valid
+		if (!is_numeric($starting_price)) {
+			$this->session->set_userdata("error", "Starting price is invalid.");
+			$this->viewListPage();
 			return;
-		} else {
-			$data = array('upload_data' => $this->upload->data());
+		}
+		if (floatval($starting_price) < 0) {
+			$this->session->set_userdata("error", "Starting price is invalid.");
+			$this->viewListPage();
+			return;
 		}
 
-		$product_Id = $this->product_model->createListing($product_name, $description, $starting_price,
-		$this->upload->data()['file_name'], $this->session->user_id, $datetime);
+		// check if date / time is valid
+		if (strtotime($datetime) - time() < 0) {
+			$this->session->set_userdata("error", "Invalid date or time.");
+			$this->viewListPage();
+			return;
+		}
+
+		for ($i = 1; $i <= $num_photos; ++$i) {
+			// $filename = $this->input->post("uploaded_file_{$count}");
+			$currenttime = md5(time());
+			$product_nameencrypt = md5($product_name);
+			$str = "{$currenttime}{$product_nameencrypt}";
+			$filename = md5($str);
+	
+			// echo $filename;
+			
+			// file config
+			$config['upload_path']   = 'assets/'; 
+			$config['allowed_types'] = 'jpg|png|jpeg|JPG|JPEG|PNG'; 
+			$config['max_size']      = 5000; 
+			$config['max_width']     = 99999; 
+			$config['max_height']    = 99999; 
+			$config['file_name'] = $filename;
+			$this->load->library('upload', $config);
+
+			
+	
+			// upload file
+			if (!$this->upload->do_upload("uploaded_file_{$i}")) {
+				// echo $this->upload->display_errors();
+				$this->session->set_userdata("error", $this->upload->display_errors());
+				
+				$this->viewListPage();
+				return;
+			} else {
+				$data["upload_data_{$i}"] = $this->upload->data();
+
+				// resize image
+				$imgconfig['image_library'] = 'gd2';
+				$imgconfig['source_image'] = '/path/to/image/mypic.jpg';
+				$imgconfig['maintain_ratio'] = TRUE;
+				$imgconfig['width']         = 1240;
+				$imgconfig['height']       = 780;
+				$this->load->library('image_lib', $imgconfig);
+			}
+		}
+
+		$filenames = array();
+		for ($i = 1; $i <= $num_photos; ++$i) {
+			array_push($filenames, $data["upload_data_{$i}"]['file_name']);
+		}
+		// var_dump($filenames);
+		// return;
+		// return;
+		$product_Id = $this->product_model->createListing($product_name, $description, $starting_price, $filenames, $this->session->user_id, $datetime);
 		$this->viewProductProper($product_Id);
 	}
 
 	// opens the listing page
 	public function viewListPage() {
 		$this->session->set_userdata('time_remaining', $this->timeout_time);
+		// $this->session->unset_userdata('error');
 
 		$this->load->view('templates/header');
 		$this->load->view('product/searchbar');
@@ -143,6 +203,7 @@ class Products extends CI_Controller {
 	// displays all info for a product
 	public function viewProductProper($product_id) {
 		$data['product_details'] = $this->product_model->getDetails($product_id);
+		$data['photo_details'] = $this->product_model->getPhotos($product_id);
 		$data['bid_history'] = $this->product_model->getBidHistory($product_id);
 
 		$seller_id = $data['product_details']->seller_id;
