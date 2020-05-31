@@ -61,13 +61,26 @@ $(document).ready(function() {
         
         </div>
         <div class="row">
-            <div class="col">
+            <div class="col-10">
                 <br>
-                    <br>
-
-                    <h5>Description:</h5>
-                    <p> <?php echo $product_details->description; ?> </p>
+                <h4><?php echo $product_details->product_name?></h4>
+                <h5>Description:</h5>
+                <p> <?php echo $product_details->description; ?> </p>
             
+            </div>
+            <div class="col-2">
+                <br>
+                <?php 
+                // echo $in_wishlist;
+                if ($in_wishlist == 0) {
+                    ?>
+                     <form method='get' action='<?php echo base_url().'Products/addToWishlist' ;?>'>
+                    <button type="submit" class="btn btn-primary" name="product_id" value="<?php echo $product_details->product_id?>">
+                        Add to Wishlist
+                    </button>
+                    </form> <?
+                }?>
+               
             </div>
         </div>
         

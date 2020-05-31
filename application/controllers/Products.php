@@ -10,15 +10,17 @@ class Products extends CI_Controller {
 	{
 		parent::__construct();
 		$this->load->model('product_model');
+		$this->load->model('login_model');
 		$this->load->helper('url_helper');
+		$this->load->helper('cookie_helper');
 		$this->load->helper('form');
-		$this->timeout_time = 600;
+		$this->timeout_time = 20;
 	}
 
 	// redirects to login page if not logged in
 	// returns true if not logged in
 	public function notLoggedIn() {
-		if (!$this->session->has_userdata('user_id')) {
+		if (get_cookie('session') == null || !$this->session->has_userdata('user_id')) {
 			// $data['error'] = "none";
 			// $this->load->view('templates/header');
 			// $this->load->view('login/login', $data);
@@ -30,7 +32,7 @@ class Products extends CI_Controller {
 
 	// search for products
 	public function searchProducts() {
-		$this->session->set_userdata('time_remaining', $this->timeout_time);
+		$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 
 		$searchterm = $this->input->get("search");
 		$results = $this->product_model->search($searchterm);
@@ -59,7 +61,7 @@ class Products extends CI_Controller {
 
 	// makes a bid on a product
 	public function makeBid() {
-		$this->session->set_userdata('time_remaining', $this->timeout_time);
+		$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 
 		$bid_price = $this->input->post("bid_price");
 		$product_id = $this->uri->segment(3);
@@ -92,7 +94,7 @@ class Products extends CI_Controller {
 
 	// makes a listing for a product
 	public function makeListing() {
-		$this->session->set_userdata('time_remaining', $this->timeout_time);
+		$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 
 		if ($this->notLoggedIn()) {
 			return;
@@ -177,9 +179,32 @@ class Products extends CI_Controller {
 		$this->viewProductProper($product_Id);
 	}
 
+	// open wishlist
+	public function viewWishlist() {
+		$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
+
+		// get wishlist items
+		$data['wishlist'] = $this->product_model->retrieveWishlist($this->session->user_id);
+		// print_r($data['wishlist']);
+		$this->load->view('templates/header');
+		$this->load->view('product/searchbar');
+		$this->load->view('product/wishlist', $data);
+		$this->load->view('templates/footer');
+	}
+
 	// opens the listing page
 	public function viewListPage() {
-		$this->session->set_userdata('time_remaining', $this->timeout_time);
+		$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
+
+		// only let verified users make listings
+		if ($this->login_model->getVerificationStatus($this->session->user_id) != '1') {
+			$data['message'] = "Only verified users may make listings.";
+			$this->load->view('templates/header');
+			$this->load->view('product/searchbar');
+			$this->load->view('login/success', $data);
+			$this->load->view('templates/footer');
+			return;
+		}
 		// $this->session->unset_userdata('error');
 
 		$this->load->view('templates/header');
@@ -188,12 +213,28 @@ class Products extends CI_Controller {
 		$this->load->view('templates/footer');
 	}
 
+	// adds to wishlist
+	public function addToWishlist() {
+		$product_id = $this->input->get('product_id');
+		$this->product_model->addToWishlist($this->session->user_id, $product_id);
+
+		$this->viewProductProper($product_id);
+	}
+
+	// deletes from wishlist
+	public function deleteFromWishlist() {
+		$product_id = $this->input->get('product_id');
+		$this->product_model->deleteFromWishlist($this->session->user_id, $product_id);
+
+		$this->viewWishlist();
+	}
+
 	// gets input from searchbar
 	public function viewProduct() {
 		$ajax = $this->input->get("ajax");
 		$product_id = $this->input->get("product_id");
 		if (isset($this->session->user_id) && $ajax != "true") {
-			$this->session->set_userdata('time_remaining', $this->timeout_time);
+			$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 		}
 		
 		// $data['product_id'] = $product_id;
@@ -239,7 +280,9 @@ class Products extends CI_Controller {
 		$data['minutes'] = $minutes;
 		$data['days'] = $days;
 		$data['seconds'] = $seconds;
-		
+
+		$data['in_wishlist'] = $this->product_model->inWishlist($this->session->user_id, $product_id);
+		// echo $data['in_wishlist'];
 		$this->load->view('templates/header');
 		$this->load->view('product/searchbar');
 		$this->load->view('product/product', $data);
@@ -248,7 +291,7 @@ class Products extends CI_Controller {
 
 	public function index(){
 		if (isset($this->session->user_id)) {
-			$this->session->set_userdata('time_remaining', $this->timeout_time);
+			$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 		}
 		$data['error'] = "none";
 		$this->load->view('templates/header');

@@ -18,6 +18,11 @@
 				<button name="submit" type="submit" class="btn btn-primary ml-3" value="log in">Submit</button>
 				<button name="submit" type="submit" class="btn btn-primary mr-3" value="register">Register</button>
 			</div>
+			<br>
+			<div class="form-group">
+				<label>Remember me</label>
+				<input class="float-left" type="checkbox" name="remember_me" class="form-control">
+			</div>
 			<?php echo form_close(); ?>
 			<?php 
 			if ($error == "invalid") {
@@ -26,7 +31,9 @@
 			}
 			?>
 		</div>
-		<div class="col"></div>
+		<div class="col">
+			
+		</div>
 	</div>
 </div>
 

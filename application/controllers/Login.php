@@ -19,7 +19,7 @@ class Login extends CI_Controller {
 		$this->load->helper('form');
 		$this->load->library('SMS');
 
-		$this->timeout_time = 600;
+		$this->timeout_time = 20;
 		$this->infinity = 9999999999999999;
 	}
 
@@ -54,7 +54,7 @@ class Login extends CI_Controller {
 	public function timeout() {
 		$this->session->time_remaining -= 1;
 
-		if ($this->session->time_remaining < 1) {
+		if ($this->session->time_remaining - time() < 1) {
 			echo 'logout';
 		} else {
 			echo $this->session->time_remaining;
@@ -78,7 +78,7 @@ class Login extends CI_Controller {
 			$this->viewProfile();
 			return;
 		}
-		$this->session->time_remaining = $this->infinity;
+		$this->session->time_remaining = time() + $this->infinity;
 		$data['error'] = "none";
 		$this->load->view('templates/header');
 		$this->load->view('login/login', $data);
@@ -88,7 +88,7 @@ class Login extends CI_Controller {
 	// redirects to login page if not logged in
 	// returns true if not logged in
 	public function notLoggedIn() {
-		if (!$this->session->has_userdata('user_id')) {
+	if (!$this->session->has_userdata('user_id')) {
 			// $data['error'] = "none";
 			// $this->load->view('templates/header');
 			// $this->load->view('login/login', $data);
@@ -103,7 +103,7 @@ class Login extends CI_Controller {
 		if ($this->notLoggedIn()) {
 			return;
 		}
-		$this->session->set_userdata('time_remaining', $this->timeout_time);
+		$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 
 		$data['user_details'] = $this->login_model->getUserDetails($this->session->user_id);
 
@@ -118,7 +118,7 @@ class Login extends CI_Controller {
 		if ($this->notLoggedIn()) {
 			return;
 		}
-		$this->session->set_userdata('time_remaining', $this->timeout_time);
+		$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 		$data['user_details'] = $this->login_model->getUserDetails($this->session->user_id);
 		$data['error'] = $error;
 		$this->load->view('templates/header');
@@ -144,6 +144,13 @@ class Login extends CI_Controller {
 		$secret = $this->input->post("secret");
 		if ($secret == strval($this->generateSecretCode($this->session->logged_in))) {
 			$this->session->set_userdata('user_id', $this->session->logged_in);
+
+			// set cookie for 14 days
+			if ($this->input->get_cookie('session') == null && $this->session->remembered) {
+				$this->input->setcookie(array('name' => 'session', 'value' => $this->session->user_id, 'expire' => '1209600'));
+			}
+			
+
 			$this->session->unset_userdata('logged_in');
 			$this->viewProfile();
 		} else {
@@ -157,10 +164,23 @@ class Login extends CI_Controller {
 	public function login() {
 		$email = $this->input->post("email");
 		$password = $this->input->post("password");
+		$rememberme = $this->input->post("remember_me");
+
+		if ($rememberme == 'on') {
+			$this->session->set_userdata('remembered', true);
+		}
+
+		$cookie_alive = get_cookie('session');
 		
+		// if we have a cookie, skip login
+		if ($cookie_alive) {
+			$this->session->set_userdata('user_id', $cookie_alive);
+			$this->viewProfile();
+			return;
+		}
+
 		if ($data = $this->login_model->checkLogin($email, $password)) {
-			$this->session->set_userdata('logged_in', $data['user_id']);
-			$this->session->set_userdata('time_remaining', $this->timeout_time);
+			$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 			// $this->twoFactor($data['user_id']); //TODO uncomment for 2fa
 
 			// comment following 2 lines for 2fa
@@ -178,6 +198,7 @@ class Login extends CI_Controller {
 
 	// logs the user out, clears session data
 	public function logout() {
+		delete_cookie('session');
 		$this->session->set_userdata('logged_in', 9999999999999);
 		$this->session->unset_userdata('user_id');
 		$this->index();
@@ -185,7 +206,7 @@ class Login extends CI_Controller {
 
 
 	public function checkEditProfile() {
-		$this->session->set_userdata('time_remaining', $this->timeout_time);
+		$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 
 		$data['email'] = $this->input->post("email");
 		$data['username'] = $this->input->post("username");
@@ -214,7 +235,7 @@ class Login extends CI_Controller {
 
 	// returns true on success, false otherwise
 	public function editProfile($data) {
-		$this->session->set_userdata('time_remaining', $this->timeout_time);
+		$this->session->set_userdata('time_remaining', time() + $this->timeout_time);
 
 		if ($this->notLoggedIn()) {
 			return;

@@ -64,6 +64,40 @@ class Product_model extends CI_Model
 		return $array;
 	}
 
+	// Adds given product to wishlist 
+	public function addToWishlist($user_id, $product_id) {
+		if (!$this->product_model->inWishlist($user_id, $product_id)) {
+			$query = "insert into wishlist (user_id, product_id) values (?, ?)";
+			$result = $this->db->query($query, array($user_id, $product_id));
+		}
+	}
+
+	// deletes item from wishlist
+	public function deleteFromWishlist($user_id, $product_id) {
+		$query = "delete from wishlist where user_id = ? and product_id = ?";
+		$result = $this->db->query($query, array($user_id, $product_id));
+	}
+
+	// retrieves the wishlist for the user
+	public function retrieveWishlist($user_id) {
+		$query = "select * from wishlist, products where wishlist.product_id = products.product_id and wishlist.user_id = ?";
+		$result = $this->db->query($query, array($user_id));
+		
+		return $result;
+	}
+
+	// if product in wishlist return 1 else return 0
+	public function inWishlist($user_id, $product_id) {
+		$query = "select * from wishlist where user_id = ? and product_id = ?";
+		$result = $this->db->query($query, array($user_id, $product_id));
+		
+		// echo $result->num_rows();
+		if ($result->num_rows() == 0) {
+			return 0;
+		}
+		return 1;
+	}
+
 	// retrieves the time in seconds until the auction has ended
 	public function auctionEndSeconds($product_id) {
 		$query = "select (to_seconds(end_datetime) - to_seconds(now())) as 'sec' from products 

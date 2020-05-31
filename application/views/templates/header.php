@@ -70,8 +70,11 @@
 							echo form_open('Login/registerform'); ?>
                             <button name="submit" type="submit" class="btn btn-link" value="register">Register</button>
                             <?php echo form_close();
-							
 						} else {
+                            echo form_open('Products/viewWishlist'); ?>
+                            <button name="submit" type="submit" class="btn btn-link" value="listing">My Wishlist</button>
+                            <?php echo form_close();
+
                             echo form_open('Products/viewListPage'); ?>
                             <button name="submit" type="submit" class="btn btn-link" value="listing">Sell something</button>
                             <?php echo form_close();
